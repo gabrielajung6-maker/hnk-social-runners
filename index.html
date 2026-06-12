@@ -989,7 +989,7 @@ async function loadSheets(){
     document.getElementById('sheet-config').innerHTML='<strong>✅ Mídia carregada — Meta: '+META_DATA.length+' · TikTok: '+TT_DATA.length+' linhas</strong>';
 
     try{
-      const stRows=await fetchSheet('Stilingue_RAW');
+      const stRows=await fetchSheet('STILINGUE_RAW');
       STILINGUE=stRows.slice(1).filter(r=>r.length>5).map(r=>({
         canal:r[1],data:r[4],polaridade:r[13],categoria:r[45]||r[44]||'',tema:(r[48]||'').toString().trim(),tags:r[31]||''
       }));
@@ -2050,32 +2050,34 @@ function renderReport(){
   const segImpr=seg.reduce((s,r)=>s+r.impressions,0);
   const segClicks=seg.reduce((s,r)=>s+r.clicks,0);
   const fSteps=[
-    {n:'01',name:'Impactos de Mídia',sub:'Mídia dos criativos de Sponsored Segments',meta:358e6,real:(segImpr||null),w:100},
-    {n:'02',name:'Cliques para o Strava',sub:'Mídia Sponsored Segments → segmento Strava',meta:5.8e6,real:(segClicks||null),w:88,conv:'~1,5% CTR social',cmin:1.5},
-    {n:'03',name:'Acesso ao Segmento',sub:'Strava · impressões do desafio',meta:1.6e6,real:STRAVA_CHALLENGE.impressions,w:76,conv:'20–35% click-to-visit',cmin:20},
-    {n:'04',name:'Cliques no Link',sub:'Strava · reward clicks → Hei App',meta:318e3,real:STRAVA_CHALLENGE.rewardClicks,w:65,conv:'15–25% CTR Strava',cmin:15},
-    {n:'05',name:'Downloads',sub:'AppsFlyer (atribuídos)',meta:127e3,real:HEIAPP.downloads,w:55,conv:'30–50% click-to-install',cmin:30},
-    {n:'06',name:'First Open',sub:'Dash HEI App · 09/04–07/06',meta:85e3,real:HEIAPP.firstOpen,w:46,conv:'67% cadastro',cmin:67},
-    {n:'07',name:'Vouchers Resgatados',sub:'Por Conta · Chora Café + Botanika',meta:3e3,real:HEIAPP.vouchers,w:38,conv:'~11,4%',cmin:11.4,final:true}
+    {n:'01',name:'Impacto de Mídia',sub:'Mídia dos criativos de Sponsored Segments',meta:358e6,real:(segImpr||null),w:100},
+    {n:'02',name:'Cliques de Mídia',sub:'Mídia Sponsored Segments → segmento Strava',meta:5.8e6,real:(segClicks||null),w:90,conv:'~1,5% CTR social',cmin:1.5},
+    {n:'03',name:'Challenge Join',sub:'Strava · entradas no desafio',meta:null,real:STRAVA_CHALLENGE.joins,w:80},
+    {n:'04',name:'Challenge Completions',sub:'Strava · correram o segmento',meta:null,real:STRAVA_CHALLENGE.completions,w:71},
+    {n:'05',name:'Reward',sub:'Strava · reward clicks → Hei App',meta:318e3,real:STRAVA_CHALLENGE.rewardClicks,w:62,cmin:15},
+    {n:'06',name:'First Open',sub:'Dash HEI App · 09/04–07/06',meta:85e3,real:HEIAPP.firstOpen,w:53},
+    {n:'07',name:'Downloads',sub:'AppsFlyer (atribuídos)',meta:127e3,real:HEIAPP.downloads,w:44},
+    {n:'08',name:'Voucher Resgatado',sub:'Por Conta · 6 Chora Café + 3 Botanika',meta:3e3,real:HEIAPP.vouchers,w:36,final:true}
   ];
   let fHtml='<div style="display:flex;flex-direction:column;gap:3px">';
   fSteps.forEach((f,i)=>{
     const isNum=typeof f.real==='number';
-    if(f.conv){
-      const prev=fSteps[i-1]; let realLine='';
+    if(i>0){
+      const prev=fSteps[i-1];
       if(prev&&typeof prev.real==='number'&&isNum&&prev.real>0){
         const rc=f.real/prev.real*100;
         let col,lbl;
         if(rc>100){col='#B45309';lbl='⚠ etapas de fontes diferentes';}
-        else if(rc>=f.cmin){col='#1F8A37';lbl='✓ dentro da meta';}
-        else {col='#DC2626';lbl='✗ abaixo da meta';}
-        realLine=`<div style="font-size:11px;font-weight:800;color:${col};margin-top:2px">conversão real: ${rc.toFixed(rc<10?2:1)}% · ${lbl}</div>`;
+        else if(f.cmin!=null){ if(rc>=f.cmin){col='#1F8A37';lbl='✓ dentro da meta';}else{col='#DC2626';lbl='✗ abaixo da meta';} }
+        else {col='#3730A3';lbl='conversão entre etapas';}
+        const planTxt=f.conv?`<span style="display:inline-block;background:#EEF2FF;color:#3730A3;font-size:9px;font-weight:600;padding:2px 10px;border-radius:10px;margin-bottom:2px">meta plano: ${f.conv}</span><br>`:'';
+        fHtml+=`<div style="text-align:center;margin:3px 0">${planTxt}<span style="font-size:11px;font-weight:800;color:${col}">conversão real: ${rc.toFixed(rc<10?2:1)}% · ${lbl}</span></div>`;
+      } else if(f.conv){
+        fHtml+=`<div style="text-align:center;margin:3px 0"><span style="display:inline-block;background:#EEF2FF;color:#3730A3;font-size:9px;font-weight:600;padding:2px 10px;border-radius:10px">meta plano: ${f.conv}</span></div>`;
       }
-      fHtml+=`<div style="text-align:center;margin:3px 0">
-        <span style="display:inline-block;background:#EEF2FF;color:#3730A3;font-size:9px;font-weight:600;padding:2px 10px;border-radius:10px">meta plano: ${f.conv}</span>${realLine}</div>`;
     }
     const realBig=isNum?fmtN(f.real):(f.real||'n/d');
-    const metaSmall=isNum&&f.meta?`meta ${fmtN(f.meta)} · ${(f.real/f.meta*100).toFixed(1)}% da meta`:`meta ${fmtN(f.meta)}`;
+    const metaSmall=isNum&&f.meta?`meta ${fmtN(f.meta)} · ${(f.real/f.meta*100).toFixed(1)}% da meta`:(f.meta?`meta ${fmtN(f.meta)}`:'sem meta no plano');
     fHtml+=`<div style="display:flex;justify-content:center">
       <div style="width:${f.w}%;min-width:300px;box-sizing:border-box;${f.final?'border:2px solid #34D27B;box-shadow:0 0 0 3px rgba(52,210,123,.15);':''}background:linear-gradient(135deg,#0B2A6B,#1A47B8);border-radius:8px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;color:#fff">
         <div style="min-width:0">
@@ -2177,32 +2179,20 @@ function renderReport(){
     <br><br><strong>Mensagem-chave:</strong> as primeiras semanas validaram os pilares — awareness em escala, aderência da comunidade runner, Strava como ambiente de engajamento e sinais concretos de conversão. O próximo ciclo foca menos em alcance e mais em <strong>simplificar a jornada e reduzir o atrito entre participação, download e resgate</strong> para aumentar a eficiência do funil.`;
   document.getElementById('r-ai-text').innerHTML=aiHtml;
 
-  // ── PRÓXIMOS PASSOS — ações de ajuste ──
-  const steps=[
-    '<strong>Otimização de mídia:</strong> migrar budget de awareness (já em escala/saturado) para baixo funil — escalar <strong>Sponsored Segments</strong> (hoje só 2,1M impressões e 34,8K cliques, mas é a mídia que efetivamente leva ao Strava), ativar <strong>retargeting</strong> dos participantes do desafio (46,8K joins · 29,5K completions) com CTA de download, e testar campanhas de <strong>objetivo de conversão</strong> levando direto ao app.',
-    '<strong>Foco de audiência:</strong> usar All Runners (nativas) para topo/awareness — já performando — e concentrar Social Runners (proprietária/Epsilon) e retargeting no meio/baixo funil, onde está o gargalo.',
-    '<strong>Jornada de conversão:</strong> direcionar direto ao download (remover a página intermediária), destacar o banner do desafio no 1º acesso, testar novo CTA ("Resgatar no HEI App") e ajustar o texto do My Bar indicando onde está o código.',
-    '<strong>Educação do usuário:</strong> FAQ de participação, tutorial dos segmentos, passo a passo de resgate, conteúdo para Instagram e HEI App, e material de apoio para promotores.',
-    '<strong>Recompensa:</strong> monitorar a atratividade do benefício e avaliar incentivos para conversão espontânea, dada a concentração de resgates em ações presenciais.'
+  // ── PRÓXIMOS PASSOS & OTIMIZAÇÕES — tabela Análise › Resultado › Ação ──
+  const nextRows=[
+    {a:'<strong>Gargalo na jornada Strava → App.</strong> A maior perda do funil acontece após o acesso ao segmento (quedas acesso→clique e acesso→download).',
+     r:'Usuários chegam à mecânica, mas não avançam para resgatar o benefício.',
+     f:'Ajustar CTAs e mensagens da jornada de resgate; reforçar o passo de baixar o app; destacar visualmente as maiores quedas no dashboard e acompanhar semanalmente.'},
+    {a:'<strong>Mecânica pouco clara.</strong> Parte dos usuários acha que basta correr o segmento, sem perceber que precisa acessar o link, baixar o app e concluir as etapas.',
+     r:'Abandono por não entender o próximo passo.',
+     f:'Criar conteúdos explicativos da mecânica; seção "Como Participar" no Strava; FAQ/Q&A; revisar textos do voucher e validar a comunicação do MyBar.'},
+    {a:'<strong>Concentração de esforços por praça.</strong> Priorizar cidades com mais PDVs simplifica a comunicação e a retirada do brinde.',
+     r:'Potencial de aumentar a eficiência de mídia e a conversão.',
+     f:'Definir os cenários de cidades e PDVs para o segundo flight.'},
+    {a:'<strong>Awareness já validado.</strong> A campanha entrega escala; o desafio agora é conversão.',
+     r:'Risco de perder a explicação da mecânica em períodos de menos mídia.',
+     f:'Avaliar manter influenciadores em períodos de menor investimento para reforçar a mecânica e sustentar awareness.'}
   ];
-  document.getElementById('r-next-steps').innerHTML=steps.map(s=>`<div style="margin-bottom:8px">${s}</div>`).join('');
-}
-
-// ── REFRESH ──
-function refreshAll(){
-  const page=document.querySelector('.page.active');
-  const idx=page?page.id.split('-')[1]:0;
-  renderByPage(parseInt(idx));
-}
-
-function renderByPage(idx){
-  if(idx===0) renderOverview();
-  else if(idx===1) renderMediaPage();
-  else if(idx===2) renderBrandChannels();
-  else if(idx===3) renderOpenWeb();
-  else if(idx===4) renderReport();
-}
-
-window.addEventListener('load', ()=>{ const fe=document.getElementById('f-end'); if(fe) fe.value=_today; loadSheets(); });
-</script>
-</body></html>
+  const th='style="text-align:left;padding:8px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);border-bottom:2px solid var(--border)"';
+  const td='style="padding:9px 10px;f
