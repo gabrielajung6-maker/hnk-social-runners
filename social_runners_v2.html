@@ -258,10 +258,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
   <!-- HEI! APP -->
   <div class="section-title" style="margin-top:20px">📱 HEI! App <span style="font-size:11px;font-weight:400;color:var(--muted)">· acumulado 09/04–21/06</span></div>
   <div class="kpi-grid kpi-4" style="margin-bottom:16px">
-    <div class="kpi-card"><div class="kpi-label">Downloads</div><div class="kpi-value num" id="hei-downloads">289</div><div class="kpi-sub">atribuídos · AppsFlyer</div></div>
+    <div class="kpi-card"><div class="kpi-label">Downloads</div><div class="kpi-value num" id="hei-downloads">225</div><div class="kpi-sub">atribuídos · AppsFlyer</div></div>
     <div class="kpi-card blue"><div class="kpi-label">First Open</div><div class="kpi-value num">5.745</div><div class="kpi-sub">App Installs/First open · 09/04–21/06</div></div>
-    <div class="kpi-card orange"><div class="kpi-label">Visitas à página de suporte</div><div class="kpi-value num">6.780</div><div class="kpi-sub">HEI App</div></div>
-    <div class="kpi-card navy"><div class="kpi-label">Vouchers resgatados</div><div class="kpi-value num">23</div><div class="kpi-sub">6 Chora · 3 Botanika · 14 sem promotor</div></div>
+    <div class="kpi-card orange"><div class="kpi-label">Visitas à página de suporte</div><div class="kpi-value num">5.769</div><div class="kpi-sub">HEI App · acumulado</div></div>
+    <div class="kpi-card navy"><div class="kpi-label">Vouchers resgatados</div><div class="kpi-value num">23</div><div class="kpi-sub">TT vouchers · acumulado até 21/06</div></div>
   </div>
 
   <!-- STRAVA -->
@@ -730,7 +730,7 @@ const HEIAPP_WK = {
   1:{ supportVisits:5744, downloads:173, firstOpen:7800,
       bannerClicks:130, bannerChora:113, bannerBotanika:17,
       vouchers:9, vouchersChora:6, vouchersBotanika:3 },
-  2:{ supportVisits:6780, downloads:289, firstOpen:5745,
+  2:{ supportVisits:5769, downloads:225, firstOpen:5745,
       bannerClicks:218, bannerChora:164, bannerBotanika:54,
       vouchers:23, vouchersChora:6, vouchersBotanika:3, vouchersOutros:14 } // acumulado até 21/06 (e-mail Estela sem 3); firstOpen = App Installs/First open
 };
@@ -2078,8 +2078,8 @@ function renderReport(){
   // ── BRAND CHANNELS no Report: posts Finish Line Run (IG + TikTok) ──
   const _IGsrc = WK.organic ? WK.organic.ig_posts : ORGANIC.ig_posts;
   const _TTsrc = WK.organic ? WK.organic.tt_posts : ORGANIC.tt_posts;
-  const flr=[..._IGsrc.filter(p=>p.is_sr&&inRange(normOrgDate(p.date),RS,RE)).map(p=>({date:normOrgDate(p.date),er:p.er||0,views:p.views||0,ch:'Instagram',desc:p.desc,url:p.url})),
-             ..._TTsrc.filter(p=>p.is_sr&&inRange(normOrgDate(p.date),RS,RE)).map(p=>({date:normOrgDate(p.date),er:p.er||0,views:p.views||0,ch:'TikTok',desc:p.title,url:p.url}))];
+  const flr=[..._IGsrc.filter(p=>p.is_sr&&inRange(normOrgDate(p.date),RS,RE)).map(p=>({date:normOrgDate(p.date),er:p.er||0,views:p.views||0,ch:'Instagram',type:(p.type||'Reel'),desc:p.desc,url:p.url})),
+             ..._TTsrc.filter(p=>p.is_sr&&inRange(normOrgDate(p.date),RS,RE)).map(p=>({date:normOrgDate(p.date),er:p.er||0,views:p.views||0,ch:'TikTok',type:'Vídeo',desc:p.title,url:p.url}))];
   const flrLW=flr.filter(p=>inRange(p.date,LW_S,LW_E)); // posts Finish Line da última semana (destaques + análise de conteúdo)
   // ER por semana
   const erWk={}; flr.forEach(p=>{if(!p.date)return;const w=getMon(p.date);if(!erWk[w])erWk[w]={s:0,n:0};erWk[w].s+=p.er;erWk[w].n++;});
@@ -2172,17 +2172,22 @@ function renderReport(){
     'No TikTok, "A Finish Line Run é muito mais do que pace" liderou com <strong>78M views</strong> — maior alcance único da campanha em canais próprios.',
     'Recomendação: manter reels de alcance no topo do funil e reforçar carrosséis / detour para engajamento e conversão para o Strava.'
   ];
-  // por semana (últimas 5 semanas até o corte), marcando semanas sem conteúdo
-  const _coWeeks=_wkKeys.map(w=>{ const d=new Date(w+'T00:00:00'); d.setDate(d.getDate()+6); const ek=d.toISOString().slice(0,10); const posts=flr.filter(p=>p.date>=w&&p.date<=ek).sort((a,b)=>b.er-a.er); return {w,ek,posts}; });
-  const _coRows=_coWeeks.map(wk=>{
-    const lbl=_wkLbl(wk.w)+'–'+_ddmm(wk.ek);
-    if(!wk.posts.length) return `<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="font-size:10px;color:var(--muted)">Semana ${lbl}</span> · <span style="color:var(--muted)">sem conteúdo orgânico na semana</span></div>`;
-    const items=wk.posts.map(p=>{const lk=p.url?` <a href="${p.url}" target="_blank" style="color:var(--blue);text-decoration:none">↗</a>`:'';return `<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:2px 0"><span style="min-width:0">${p.ch} · ${(p.desc||'').substring(0,46)}${lk}</span><strong style="white-space:nowrap">${p.er.toFixed(2)}% · ${fmtN(p.views)}v</strong></div>`;}).join('');
-    return `<div style="padding:7px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--muted);margin-bottom:3px;font-weight:600">Semana ${lbl}</div>${items}</div>`;
-  }).join('');
+  // Tabela de todos os posts próprios Finish Line (deduplicada por link), estilo Brand Channels
+  // só posts identificados como Finish Line (Club/Run) na legenda; dedupe por texto (mantém maior views)
+  const _coIsFL=p=>{const d=(p.desc||'').toLowerCase(); return d.indexOf('finish line')>=0||d.indexOf('finishline')>=0;};
+  const _coKey=p=>(p.desc||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,40);
+  const _coMap={};
+  flr.filter(_coIsFL).forEach(p=>{ const k=_coKey(p); if(!_coMap[k]||(p.views||0)>(_coMap[k].views||0)) _coMap[k]=p; });
+  const _coAll=Object.values(_coMap).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.views-a.views));
+  const _thS='style="text-align:left;padding:7px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);border-bottom:2px solid var(--border)"';
+  const _tdS='style="padding:7px 8px;font-size:12px;vertical-align:top;border-bottom:1px solid var(--border)"';
+  const _coTable=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+      <thead><tr><th ${_thS} style="white-space:nowrap">Data</th><th ${_thS}>Canal</th><th ${_thS}>Tipo</th><th ${_thS}>Post</th><th ${_thS} style="text-align:right">Views</th><th ${_thS} style="text-align:right">ER</th></tr></thead>
+      <tbody>${_coAll.map(p=>`<tr><td ${_tdS} style="white-space:nowrap;padding:7px 8px">${(p.date||'').split('-').reverse().join('/')}</td><td ${_tdS}>${p.ch}</td><td ${_tdS}>${p.type||'—'}</td><td ${_tdS}>${(p.desc||'').substring(0,70)}${(p.desc||'').length>70?'…':''} ${p.url?`<a href="${p.url}" target="_blank" style="color:var(--blue);text-decoration:none">↗</a>`:''}</td><td ${_tdS} style="text-align:right;padding:7px 8px;white-space:nowrap">${fmtN(p.views)}</td><td ${_tdS} style="text-align:right;padding:7px 8px;white-space:nowrap"><strong>${(p.er||0).toFixed(2)}%</strong></td></tr>`).join('')}</tbody>
+    </table></div>`;
   document.getElementById('r-content-own').innerHTML = `
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Conteúdo próprio Finish Line por semana · últimas 5 semanas até ${_ddmm(RE)}</div>
-    ${_coRows}
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Posts próprios Finish Line — todos os posts (acumulado até ${_ddmm(RE)})</div>
+    ${_coAll.length?_coTable:'<div style="font-size:12px;color:var(--muted);padding:10px 0">Sem posts próprios Finish Line no período.</div>'}
     <div style="margin-top:14px;font-size:12px;line-height:1.7"><strong>Aprendizados:</strong><ul style="margin:6px 0 0;padding-left:18px">${aprendWk.map(a=>`<li style="margin-bottom:5px">${a}</li>`).join('')}</ul></div>`;
 
   // ── STRAVA ──
@@ -2245,25 +2250,25 @@ function renderReport(){
   const aiHtmlS2 = `<strong>Seguimos crescendo mesmo com a mídia pausada — e convertendo melhor, sem promotoras.</strong>
     <br><br>A mídia paga foi encerrada em <strong>11/06</strong>, mas a campanha continuou avançando: o Strava Challenge ganhou <strong>+${fmtN(STRAVA_CHALLENGE.joins-_c1.joins)} joins</strong> e <strong>+${fmtN(STRAVA_CHALLENGE.completions-_c1.completions)} completions</strong> no período — crescimento não expressivo, mas relevante por acontecer <strong>sem investimento novo de mídia</strong> (tração orgânica da comunidade no curto prazo).
     <br><br>O ponto mais importante está no <strong>fundo do funil</strong>: os vouchers resgatados subiram de ${_h1.vouchers} para <strong>${HEIAPP.vouchers}</strong> (+${HEIAPP.vouchers-_h1.vouchers}) e, desta vez, <strong>todos sem a presença de promotoras</strong>. A mecânica converteu por conta própria — indício direto de que a jornada ficou mais fácil de entender e de que os ajustes de fluxo começaram a destravar a conversão.
-    <br><br>As taxas confirmam a leitura: <strong>reward click → download 1,4% → 2,0%</strong> e <strong>download → voucher 5,2% → 8,0%</strong>.
-    <br><br><strong>Benchmark:</strong> mesmo sem mídia ativa, o Detour converte acima de ações anteriores — a "Poderia ser uma Heineken" resgatou 31 vouchers em um mês, com 14 bares cadastrados; a ação atual já soma 23 vouchers com apenas 2 bares e uma jornada mais longa, reforçando que a mecânica converte de forma eficiente mesmo sem mídia e sem promotor.
-    <br><br><strong>Resumo:</strong> com menos investimento (mídia pausada) e sem apoio presencial, convertemos mais — o que valida a direção das otimizações de jornada. O risco a monitorar é o topo do funil: sem mídia nova, a entrada de novos participantes tende a desacelerar nas próximas semanas.`;
+    <br><br>As taxas confirmam a leitura: <strong>reward click → download 1,4% → 1,6%</strong> e <strong>download → voucher 5,2% → 10%</strong>.
+    <br><br><strong>Benchmark:</strong> mesmo sem mídia ativa, o Detour converte acima de ações anteriores — a "Poderia ser uma Heineken" resgatou 9 vouchers em dois meses, com 14 bares cadastrados; a ação atual já soma 23 vouchers com apenas 2 bares e uma jornada mais longa, reforçando que a mecânica converte de forma eficiente mesmo sem mídia e sem promotor.
+    <br><br><strong>Resumo:</strong> com menos investimento (mídia pausada) e sem apoio presencial, convertemos mais — o que valida a direção das otimizações de jornada. <strong>Watch-out:</strong> o crescimento se sustentou no orgânico (joins e completions ainda subindo, porém em ritmo menor), mas como a mídia não será reativada na próxima semana, o topo do funil tende a desacelerar — vale acompanhar a curva de joins.`;
   document.getElementById('r-ai-text').innerHTML = WK.num===2 ? aiHtmlS2 : aiHtml;
 
   // ── PRÓXIMOS PASSOS & OTIMIZAÇÕES — tabela Análise › Resultado › Ação ──
   const nextRows = WK.num===2 ? [
     {a:'<strong>A jornada de resgate começou a destravar.</strong> A conversão do fundo do funil melhorou e os resgates passaram a ocorrer sem promotoras.',
      r:'A mecânica ficou mais clara e converte de forma autônoma.',
-     f:'Manter e reforçar os ajustes de CTA/comunicação da mecânica; finalizar o conteúdo tutorial da mecânica (em aprovação com a Bruna); documentar o que mudou para replicar.'},
-    {a:'<strong>Crescimento se sustenta sem mídia, mas com risco no topo.</strong> Joins/completions seguiram subindo após a pausa de 11/06, porém em ritmo menor.',
-     r:'Comunidade ativa no curto prazo; entrada de novos participantes tende a secar sem mídia.',
-     f:'Acompanhar a curva de joins semana a semana; reativar mídia de baixo funil/retargeting antes que o topo desacelere.'},
+     f:'Manter e reforçar os ajustes de CTA/comunicação da mecânica; desenvolvimento de conteúdo tutorial da mecânica.'},
     {a:'<strong>Concentração de praças em SP (decidido com o Trade).</strong> Reduzir PDVs em BH e Curitiba e aumentar em SP, aproveitando o aprendizado da capital.',
      r:'Maior eficiência de mídia e de conversão, sobre audiência e mecânica já maduras.',
      f:'Priorizar PDVs próximos ao Parque Ibirapuera; o Trade atualiza a planilha de praças.'},
-    {a:'<strong>Resgate presencial deixou de ser gargalo.</strong> Vouchers sem promotor indicam que o atrito estava na jornada, não na atratividade do prêmio.',
-     r:'Foco correto = simplificar fluxo, não (ainda) reforçar a recompensa.',
-     f:'Seguir simplificando a jornada; avaliar reforço de prêmio só depois — ex.: combo brunch com Heineken, respeitando regras de promoção e orçamento.'}
+    {a:'<strong>Testar novos incentivos.</strong> Avaliar um incentivo maior (ex.: 2 Heinekens), em análise na mecânica com o Trade.',
+     r:'Há folga na meta de vouchers, o que abre espaço para um prêmio mais atrativo.',
+     f:'Validar a mecânica do incentivo com o Trade e testar em campo.'},
+    {a:'<strong>Strava como principal canal de comunicação.</strong> Reforçar a comunicação no canal, explicando os desafios e os prêmios.',
+     r:'Canal com comunidade ativa e em crescimento, mesmo sem mídia.',
+     f:'Reforçar o conteúdo no Strava; ativar PR e creators para amplificar a ação.'}
   ] : [
     {a:'<strong>Gargalo na jornada Strava → App.</strong> A maior perda do funil acontece após o acesso ao segmento (quedas acesso→clique e acesso→download).',
      r:'Usuários chegam à mecânica, mas não avançam para resgatar o benefício.',
@@ -2285,7 +2290,7 @@ function renderReport(){
       <thead><tr><th ${th} style="width:36%">Análise</th><th ${th} style="width:24%">Resultado</th><th ${th} style="width:40%">O que vai ser feito</th></tr></thead>
       <tbody>${nextRows.map(o=>`<tr><td ${td}>${o.a}</td><td ${td}>${o.r}</td><td ${td}>${o.f}</td></tr>`).join('')}</tbody>
     </table>
-    ${WK.num===2 ? `<div style="margin-top:12px;font-size:12px;line-height:1.7;color:var(--text);background:#EEF4FB;border-radius:8px;padding:10px 14px"><strong>Concentração em SP (decidido com o Trade):</strong> reduzir PDVs em BH e Curitiba e adensar SP, onde já há audiência e a mecânica está madura — tende a melhorar a eficiência de mídia e a conversão. <strong>Próximo passo:</strong> mapear PDVs próximos ao Parque Ibirapuera (alta concentração de público) e atualizar a planilha de praças com o Trade.</div>` : `<div style="margin-top:12px;font-size:12px;line-height:1.7;color:var(--text)"><strong>Sequência:</strong> 1) Implementar ajustes de comunicação e experiência · 2) Validar eventos e tracking com o Strava · 3) Revisar a estrutura do funil no dashboard · 4) Definir cenários de cidades e PDVs para o 2º flight · 5) Acompanhar os resultados pós-otimização (conversão e resgate).</div>`}`;
+    ${WK.num===2 ? `` : `<div style="margin-top:12px;font-size:12px;line-height:1.7;color:var(--text)"><strong>Sequência:</strong> 1) Implementar ajustes de comunicação e experiência · 2) Validar eventos e tracking com o Strava · 3) Revisar a estrutura do funil no dashboard · 4) Definir cenários de cidades e PDVs para o 2º flight · 5) Acompanhar os resultados pós-otimização (conversão e resgate).</div>`}`;
 }
 
 // ── REFRESH ──
